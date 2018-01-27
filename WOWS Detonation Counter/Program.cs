@@ -25,7 +25,7 @@ namespace WOWS_Detonation_Counter
             MySqlConnection myConn;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-01-19");
+            Console.WriteLine("by bunnyxt 2018-01-27");
             Console.WriteLine();
 
             //load config from ./config.json
@@ -145,6 +145,8 @@ namespace WOWS_Detonation_Counter
                     throw new Exception();
             }
 
+            Console.ReadLine();
+
             //close database
             try
             {
@@ -160,8 +162,6 @@ namespace WOWS_Detonation_Counter
             }
             Console.WriteLine("close succeed!");
             Console.WriteLine();
-
-            Console.ReadKey();
 
             //done
             MessageBox.Show("Done!", "Notice");

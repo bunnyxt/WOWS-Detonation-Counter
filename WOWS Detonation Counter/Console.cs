@@ -107,7 +107,7 @@ namespace WOWS_Detonation_Counter
                 IsFirstWaring = false;
             }
 
-            value = DateTime.Now.ToString() + " " + value;
+            value = DateTime.Now.ToString() + " " + value + "\r\n";
             System.IO.File.AppendAllText(System.IO.Path.Combine(Environment.CurrentDirectory,
                                          "log_" + StartDate + "_warning.txt"), value, Encoding.Default);
         }
