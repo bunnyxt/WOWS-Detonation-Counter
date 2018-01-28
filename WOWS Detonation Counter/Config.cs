@@ -33,6 +33,9 @@ namespace WOWS_Detonation_Counter
         [JsonProperty("mode5")]
         public Mode5 Mode5 { get; set; }
 
+        [JsonProperty("mail")]
+        public Mail Mail { get; set; }
+
         public static Config FromJson(string json) => JsonConvert.DeserializeObject<Config>(json, Converter.Settings);
     }
 
@@ -94,6 +97,21 @@ namespace WOWS_Detonation_Counter
 
         [JsonProperty("database")]
         public string Database { get; set; }
+    }
+
+    public class Mail
+    {
+        [JsonProperty("sender")]
+        public string Sender { get; set; }
+
+        [JsonProperty("receiver")]
+        public string Receiver { get; set; }
+
+        [JsonProperty("clientHost")]
+        public string ClientHost { get; set; }
+
+        [JsonProperty("creditCode")]
+        public string CreditCode { get; set; }
     }
 
     public static class Serialize

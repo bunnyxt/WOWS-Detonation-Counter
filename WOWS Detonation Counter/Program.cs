@@ -11,7 +11,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
+using System.Net.Mail;
 using WOWS_Detonation_Counter;
+using System.Net;
 
 namespace WOWS_Detonation_Counter
 {
@@ -25,7 +27,7 @@ namespace WOWS_Detonation_Counter
             MySqlConnection myConn;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-01-27");
+            Console.WriteLine("by bunnyxt 2018-01-28");
             Console.WriteLine();
 
             //load config from ./config.json
@@ -85,6 +87,9 @@ namespace WOWS_Detonation_Counter
                     Console.WriteLine("targetMinId:\t" + config.Mode5.TargetMinId);
                     Console.WriteLine("targetMaxId:\t" + config.Mode5.TargetMaxId);
                     break;
+                //case 999:
+                //    SendMail("SubjectTest","BodyTest");
+                //    break;
                 default:
                     Console.WriteLine("Invalid mode id " + config.Mode + " !");
                     Console.WriteWarning("Invalid mode id " + config.Mode + " !");
@@ -256,6 +261,14 @@ namespace WOWS_Detonation_Counter
                 //get player personal data
                 RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
+                //check skip status
+                if (playerPersonalDataData.status == "skip")
+                {
+                    Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                    Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                    continue;
+                }
+
                 //check account_id existed or not
                 if (playerPersonalDataData.data.playerPersonalDataDataData == null)
                 {
@@ -265,6 +278,8 @@ namespace WOWS_Detonation_Counter
                     if (nullCount == 1000)
                     {
                         Console.WriteLine("1000 invalid account_id passed!");
+                        //TODO  account_id - 1000?? or - 1001??
+                        SendMail("Mode 1 Finihed!", "1000 invalid acount_id passed! Mow max account_id is " + (account_id - 1000) + ", max id is " + id + ".");
                         MessageBox.Show("1000 invalid account_id passed!", "Notice!");
                         break;
                     }
@@ -366,6 +381,14 @@ namespace WOWS_Detonation_Counter
 
                     //get player achievement data
                     playerAchievementData = await Proxy.GetPlayerAchievementAsync(account_id);
+
+                    //check skip status
+                    if (playerAchievementData.status == "skip")
+                    {
+                        Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                        Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                        continue;
+                    }
 
                     //calculate battle sum and deto sum
                     btleSum =
@@ -1547,6 +1570,32 @@ namespace WOWS_Detonation_Counter
                 throw;
             }
 
+        }
+
+        public static void SendMail(string subject, string body)
+        {
+            try
+            {
+                MailMessage mailMessage = new MailMessage();
+                mailMessage.From = new MailAddress(config.Mail.Sender);
+                mailMessage.To.Add(new MailAddress(config.Mail.Receiver));
+                mailMessage.Subject = subject;
+                mailMessage.Body = body;
+                SmtpClient client = new SmtpClient();
+                client.Host = config.Mail.ClientHost;
+                client.EnableSsl = true;
+                client.UseDefaultCredentials = false;
+                client.Credentials = new NetworkCredential(config.Mail.Sender, config.Mail.CreditCode);
+                client.Send(mailMessage);
+                Console.WriteLine("Mail sent succeed!\nSubject:" + subject + "\nBody:" + body);
+                Console.WriteWarning("Mail sent succeed!\r\nSubject:" + subject + "\r\nBody:" + body);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Mail sent exception detected! Details:" + e.Message);
+                Console.WriteWarning("Mail sent succeed! Subject:" + subject + " Body:" + body);
+                return;
+            }
         }
     }
 }
