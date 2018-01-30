@@ -543,6 +543,7 @@ namespace WOWS_Detonation_Counter
             try
             {
                 myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player WHERE id >= " + rangeMin + " && id <= " + rangeMax + " ORDER BY id;", myConn);
+                myCmd.CommandTimeout = 60;//60s timeout
                 myRdr = myCmd.ExecuteReader();
 
                 //connect to database for inner usage
@@ -563,11 +564,11 @@ namespace WOWS_Detonation_Counter
 
                 //get user profile before
                 int i = 0;
-                //range limit 500000
-                int[] ids = new int[500000];
-                long[] accountIds = new long[500000];
-                string[] usernames = new string[500000];
-                bool[] isHiddens = new bool[500000];
+                //range limit 300000
+                int[] ids = new int[300000];
+                long[] accountIds = new long[300000];
+                string[] usernames = new string[300000];
+                bool[] isHiddens = new bool[300000];
                 while (myRdr.Read())
                 {
                     ids[i] = myRdr.GetInt32(0);
