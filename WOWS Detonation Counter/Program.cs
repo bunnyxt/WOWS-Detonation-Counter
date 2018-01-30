@@ -602,6 +602,7 @@ namespace WOWS_Detonation_Counter
                     {
                         Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
                         Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                        SendMail("Skip status detected!", DateTime.Now.ToString() + "  playerPersonalDataData.status == \"skip\"  Now skip id:" + id + " account_id:" + account_id + "!");
                         continue;
                     }
 
@@ -697,6 +698,7 @@ namespace WOWS_Detonation_Counter
                         {
                             Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
                             Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                            SendMail("Skip status detected!", DateTime.Now.ToString() + "  playerAchievementData.status == \"skip\"  Now skip id:" + id + " account_id:" + account_id + "!");
                             continue;
                         }
 
