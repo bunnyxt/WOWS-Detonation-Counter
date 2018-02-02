@@ -9,6 +9,9 @@ namespace WOWS_Detonation_Counter
 {
     public class Config
     {
+        [JsonProperty("tag")]
+        public string Tag { get; set; }
+
         [JsonProperty("date")]
         public string Date { get; set; }
 

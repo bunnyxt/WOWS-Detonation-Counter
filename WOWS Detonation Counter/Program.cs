@@ -785,6 +785,8 @@ namespace WOWS_Detonation_Counter
                 }
                 Console.WriteLine("close succeed!");
                 Console.WriteLine();
+
+                SendMail("Mode 2 Finihed!", "RangeMin:" + config.Mode2.RangeMin + " RangeMax:" + config.Mode2.RangeMax);
             }
             catch (Exception e)
             {
@@ -1583,7 +1585,7 @@ namespace WOWS_Detonation_Counter
                 mailMessage.From = new MailAddress(config.Mail.Sender);
                 mailMessage.To.Add(new MailAddress(config.Mail.Receiver));
                 mailMessage.Subject = subject;
-                mailMessage.Body = body;
+                mailMessage.Body = body + "  From:" + config.Tag;
                 SmtpClient client = new SmtpClient();
                 client.Host = config.Mail.ClientHost;
                 client.EnableSsl = true;
