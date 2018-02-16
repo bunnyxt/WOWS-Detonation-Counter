@@ -22,12 +22,18 @@ namespace WOWS_Detonation_Counter
         //execute config
         static Config config;
 
+        static DateTime startTime;
+        static DateTime endTime;
+
         static void Main(string[] args)
         {
             MySqlConnection myConn;
 
+            startTime = DateTime.Now;
+
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-01-28");
+            Console.WriteLine("by bunnyxt 2018-02-16");
+            Console.WriteLine("start time : " + startTime.ToString());
             Console.WriteLine();
 
             //load config from ./config.json
@@ -278,9 +284,11 @@ namespace WOWS_Detonation_Counter
                     if (nullCount == 1000)
                     {
                         Console.WriteLine("1000 invalid account_id passed!");
+                        endTime = DateTime.Now;
+                        Console.WriteLine("end time : " + endTime.ToString());
+                        Console.WriteLine();
                         //TODO  account_id - 1000?? or - 1001??
-                        SendMail("Mode 1 Finihed!", "1000 invalid acount_id passed! Mow max account_id is " + (account_id - 1000) + ", max id is " + id + ".");
-                        MessageBox.Show("1000 invalid account_id passed!", "Notice!");
+                        SendMail("Mode 1 Finihed!", "1000 invalid acount_id passed! Mow max account_id is " + (account_id - 1000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
                         break;
                     }
 
@@ -527,7 +535,7 @@ namespace WOWS_Detonation_Counter
             rangeMax = config.Mode2.RangeMax;
             Console.WriteLine(rangeMin);
             Console.WriteLine(rangeMax);
-            if (rangeMin < rangeMax && rangeMin >= 1 && rangeMax <= existedMaxId)
+            if (rangeMin <= rangeMax && rangeMin >= 1 && rangeMax <= existedMaxId)
             {
                 Console.WriteLine("Now start updating user " + rangeMin + " - " + rangeMax + "...");
             }
@@ -786,7 +794,10 @@ namespace WOWS_Detonation_Counter
                 Console.WriteLine("close succeed!");
                 Console.WriteLine();
 
-                SendMail("Mode 2 Finihed!", "RangeMin:" + config.Mode2.RangeMin + " RangeMax:" + config.Mode2.RangeMax);
+                endTime = DateTime.Now;
+                Console.WriteLine("end time : " + endTime.ToString());
+                Console.WriteLine();
+                SendMail("Mode 2 Finihed!", "RangeMin:" + config.Mode2.RangeMin + " RangeMax:" + config.Mode2.RangeMax + " start time : " + startTime.ToString() + " end time : " + endTime.ToString());
             }
             catch (Exception e)
             {
