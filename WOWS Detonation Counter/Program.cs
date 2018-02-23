@@ -32,7 +32,7 @@ namespace WOWS_Detonation_Counter
             startTime = DateTime.Now;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-02-16");
+            Console.WriteLine("by bunnyxt 2018-02-23");
             Console.WriteLine("start time : " + startTime.ToString());
             Console.WriteLine();
 
