@@ -39,6 +39,7 @@ namespace WOWS_Detonation_Counter
                     }
                     else
                     {
+                        Thread.Sleep(1000);
                         goto RESTART;
                     }
                 }
@@ -72,6 +73,7 @@ namespace WOWS_Detonation_Counter
                     }
                     else
                     {
+                        Thread.Sleep(1000);
                         goto RESTART;
                     }
                 }
@@ -81,13 +83,13 @@ namespace WOWS_Detonation_Counter
                 repeatCount++;
                 Console.WriteLine("Exception detected! Details:" + e.Message + " Retry after 10 seconds... Count:" + repeatCount);
                 Console.WriteWarning("Exception detected! Details:" + e.Message + " Retry after 10 seconds... Count:" + repeatCount);
-                Thread.Sleep(10000);
                 if (repeatCount >= 10)
                 {
                     goto SKIP;
                 }
                 else
                 {
+                    Thread.Sleep(10000);
                     goto RESTART;
                 }
             }
@@ -103,6 +105,7 @@ namespace WOWS_Detonation_Counter
                 }
                 else
                 {
+                    Thread.Sleep(1000);
                     goto RESTART;
                 }
             }
@@ -138,6 +141,7 @@ namespace WOWS_Detonation_Counter
                     }
                     else
                     {
+                        Thread.Sleep(1000);
                         goto RESTART;
                     }
                 }
@@ -162,6 +166,7 @@ namespace WOWS_Detonation_Counter
                     }
                     else
                     {
+                        Thread.Sleep(1000);
                         goto RESTART;
                     }
                 }
@@ -171,13 +176,29 @@ namespace WOWS_Detonation_Counter
                 repeatCount++;
                 Console.WriteLine("Exception detected! Details:" + e.Message + " Retry after 10 seconds... Count:" + repeatCount);
                 Console.WriteWarning("Exception detected! Details:" + e.Message + " Retry after 10 seconds... Count:" + repeatCount);
-                Thread.Sleep(10000);
                 if (repeatCount >= 10)
                 {
                     goto SKIP;
                 }
                 else
                 {
+                    Thread.Sleep(10000);
+                    goto RESTART;
+                }
+            }
+
+            if (playerAchievement == null)
+            {
+                repeatCount++;
+                Console.WriteLine("Null player achievement detected! Now go back to retry. Count:" + repeatCount);
+                Console.WriteWarning("Null player achievement detected! Now go back to retry. Count:" + repeatCount);
+                if (repeatCount >= 10)
+                {
+                    goto SKIP;
+                }
+                else
+                {
+                    Thread.Sleep(1000);
                     goto RESTART;
                 }
             }

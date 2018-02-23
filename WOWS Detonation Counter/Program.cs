@@ -264,8 +264,8 @@ namespace WOWS_Detonation_Counter
                 username = "";
                 isHidden = false;
 
-                //get player personal data
-                RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
+            //get player personal data
+            RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
                 //check skip status
                 if (playerPersonalDataData.status == "skip")
@@ -603,8 +603,8 @@ namespace WOWS_Detonation_Counter
                     username = usernames[i];
                     isHidden = isHiddens[i];
 
-                    //get personal data for personal information and battle number
-                    RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
+                //get personal data for personal information and battle number
+                RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
                     //check skip status
                     if (playerPersonalDataData.status == "skip")
@@ -863,8 +863,8 @@ namespace WOWS_Detonation_Counter
             {
                 Console.WriteLine("account_id:" + account_id);
 
-                //get player personal data
-                RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
+            //get player personal data
+            RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
                 //check account_id existed or not
                 if (playerPersonalDataData.data.playerPersonalDataDataData == null)
@@ -1018,8 +1018,8 @@ namespace WOWS_Detonation_Counter
                     username = "";
                     isHidden = false;
 
-                    //get player personal data
-                    RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
+                //get player personal data
+                RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
                     //check account_id existed or not
                     if (playerPersonalDataData.data.playerPersonalDataDataData == null)
@@ -1363,8 +1363,8 @@ namespace WOWS_Detonation_Counter
                     username = "";
                     isHidden = false;
 
-                    //get player personal data
-                    RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
+                //get player personal data
+                RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
                     //check account_id existed or not
                     if (playerPersonalDataData.data.playerPersonalDataDataData == null)
@@ -1595,7 +1595,7 @@ namespace WOWS_Detonation_Counter
                 MailMessage mailMessage = new MailMessage();
                 mailMessage.From = new MailAddress(config.Mail.Sender);
                 mailMessage.To.Add(new MailAddress(config.Mail.Receiver));
-                mailMessage.Subject = subject;
+                mailMessage.Subject = config.Tag + " : " + subject;
                 mailMessage.Body = body + "  From:" + config.Tag;
                 SmtpClient client = new SmtpClient();
                 client.Host = config.Mail.ClientHost;
@@ -1603,13 +1603,13 @@ namespace WOWS_Detonation_Counter
                 client.UseDefaultCredentials = false;
                 client.Credentials = new NetworkCredential(config.Mail.Sender, config.Mail.CreditCode);
                 client.Send(mailMessage);
-                Console.WriteLine("Mail sent succeed!\nSubject:" + subject + "\nBody:" + body);
-                Console.WriteWarning("Mail sent succeed!\r\nSubject:" + subject + "\r\nBody:" + body);
+                Console.WriteLine("Mail sent succeed! \nSubject:" + subject + " \nBody:" + body);
+                Console.WriteWarning("Mail sent succeed! \r\nSubject:" + subject + " \r\nBody:" + body);
             }
             catch (Exception e)
             {
                 Console.WriteLine("Mail sent exception detected! Details:" + e.Message);
-                Console.WriteWarning("Mail sent succeed! Subject:" + subject + " Body:" + body);
+                Console.WriteWarning("Mail sent exception detected! Details:" + e.Message);
                 return;
             }
         }
