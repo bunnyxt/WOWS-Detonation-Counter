@@ -27,6 +27,9 @@ namespace WOWS_Detonation_Counter
         [JsonProperty("mode2")]
         public Mode2 Mode2 { get; set; }
 
+        [JsonProperty("mode3")]
+        public Mode3 Mode3 { get; set; }
+
         [JsonProperty("mail")]
         public Mail Mail { get; set; }
 
@@ -46,6 +49,12 @@ namespace WOWS_Detonation_Counter
 
         [JsonProperty("rangeMax")]
         public int RangeMax { get; set; }
+    }
+
+    public class Mode3
+    {
+        [JsonProperty("accountId")]
+        public long AccountId { get; set; }
     }
 
     public class MySqlDatabase
