@@ -71,6 +71,7 @@ namespace WOWS_Detonation_Counter
                 case 1:
                     Console.WriteLine("mode1:");
                     Console.WriteLine("targetSum:\t" + config.Mode1.TargetSum);
+                    Console.WriteLine("startAccountId:\t" + config.Mode1.StartAccountId);
                     break;
                 case 2:
                     Console.WriteLine("mode2:");
@@ -234,6 +235,14 @@ namespace WOWS_Detonation_Counter
             //getting new users
             id = existedMaxId;
             account_id++;
+
+            //modify
+            if (config.Mode1.StartAccountId != -1)
+            {
+                Console.WriteLine("Change StartAccountId to " + config.Mode1.StartAccountId + " .");
+                account_id = config.Mode1.StartAccountId;
+            }
+
             while (count < targetSum)
             {
                 Console.WriteLine("account_id:" + account_id);
@@ -420,6 +429,38 @@ namespace WOWS_Detonation_Counter
                         goto RESTART;
                     }
 
+                    //initialize other table with 0
+                    try
+                    {
+                        myCmd = new MySqlCommand(String.Format("" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_total_rank` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_btle_period` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period_rank` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_total_ratio` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_total_ratio_rank` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period_ratio_rank` (`id`) VALUES ('{0}');",
+                        id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to initialize other table!");
+                            MessageBox.Show("Fail to initialize other table!", "Error!");
+                            goto RESTART;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
+                        goto RESTART;
+                    }
+
                     //update battle sum and deto sum for trigger
                     try
                     {
@@ -454,38 +495,6 @@ namespace WOWS_Detonation_Counter
                         goto RESTART;
                     }
 
-                }
-
-                //initialize other table with 0
-                try
-                {
-                    myCmd = new MySqlCommand(String.Format("" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_total_rank` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_btle_period` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period_rank` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_total_ratio` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_total_ratio_rank` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio_rank` (`id`) VALUES ('{0}');",
-                    id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fail to initialize other table!");
-                        MessageBox.Show("Fail to initialize other table!", "Error!");
-                        goto RESTART;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                    Console.WriteLine("Retry after 10 seconds...");
-                    Thread.Sleep(10000);
-                    goto RESTART;
                 }
 
                 Console.WriteLine(
@@ -1076,6 +1085,38 @@ namespace WOWS_Detonation_Counter
                     goto RESTART;
                 }
 
+                //initialize other table with 0
+                try
+                {
+                    myCmd = new MySqlCommand(String.Format("" +
+                    "INSERT INTO `wows_detonation`.`asia_deto_total_rank` (`id`) VALUES ('{0}');" +
+                    "INSERT INTO `wows_detonation`.`asia_btle_period` (`id`) VALUES ('{0}');" +
+                    "INSERT INTO `wows_detonation`.`asia_deto_period` (`id`) VALUES ('{0}');" +
+                    "INSERT INTO `wows_detonation`.`asia_deto_period_rank` (`id`) VALUES ('{0}');" +
+                    "INSERT INTO `wows_detonation`.`asia_deto_total_ratio` (`id`) VALUES ('{0}');" +
+                    "INSERT INTO `wows_detonation`.`asia_deto_total_ratio_rank` (`id`) VALUES ('{0}');" +
+                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');" +
+                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio_rank` (`id`) VALUES ('{0}');",
+                    id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1), myConn);
+                    if (myCmd.ExecuteNonQuery() > 0)
+                    {
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Fail to initialize other table!");
+                        MessageBox.Show("Fail to initialize other table!", "Error!");
+                        goto RESTART;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                    Console.WriteLine("Retry after 10 seconds...");
+                    Thread.Sleep(10000);
+                    goto RESTART;
+                }
+
                 //update battle sum and deto sum for trigger
                 try
                 {
@@ -1110,40 +1151,6 @@ namespace WOWS_Detonation_Counter
                     goto RESTART;
                 }
 
-            }
-
-
-
-            //initialize other table with 0
-            try
-            {
-                myCmd = new MySqlCommand(String.Format("" +
-                "INSERT INTO `wows_detonation`.`asia_deto_total_rank` (`id`) VALUES ('{0}');" +
-                "INSERT INTO `wows_detonation`.`asia_btle_period` (`id`) VALUES ('{0}');" +
-                "INSERT INTO `wows_detonation`.`asia_deto_period` (`id`) VALUES ('{0}');" +
-                "INSERT INTO `wows_detonation`.`asia_deto_period_rank` (`id`) VALUES ('{0}');" +
-                "INSERT INTO `wows_detonation`.`asia_deto_total_ratio` (`id`) VALUES ('{0}');" +
-                "INSERT INTO `wows_detonation`.`asia_deto_total_ratio_rank` (`id`) VALUES ('{0}');" +
-                "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');" +
-                "INSERT INTO `wows_detonation`.`asia_deto_period_ratio_rank` (`id`) VALUES ('{0}');",
-                id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1), myConn);
-                if (myCmd.ExecuteNonQuery() > 0)
-                {
-
-                }
-                else
-                {
-                    Console.WriteLine("Fail to initialize other table!");
-                    MessageBox.Show("Fail to initialize other table!", "Error!");
-                    goto RESTART;
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                Console.WriteLine("Retry after 10 seconds...");
-                Thread.Sleep(10000);
-                goto RESTART;
             }
 
             Console.WriteLine(

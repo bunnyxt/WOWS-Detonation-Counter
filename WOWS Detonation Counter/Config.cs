@@ -40,6 +40,9 @@ namespace WOWS_Detonation_Counter
     {
         [JsonProperty("targetSum")]
         public int TargetSum { get; set; }
+
+        [JsonProperty("startAccountId")]
+        public int StartAccountId { get; set; }
     }
 
     public class Mode2
