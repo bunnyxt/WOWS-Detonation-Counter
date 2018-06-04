@@ -32,7 +32,7 @@ namespace WOWS_Detonation_Counter
             startTime = DateTime.Now;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-03-28");
+            Console.WriteLine("by bunnyxt 2018-06-4");
             Console.WriteLine("start time : " + startTime.ToString());
             Console.WriteLine();
 
@@ -386,10 +386,10 @@ namespace WOWS_Detonation_Counter
                             Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div3.battles);
                     detoSum = playerAchievementData.data.playerAchievementDataData.battle.DETONATED;
 
-                    //insert battle sum and deto sum
+                    //initialize battle sum and deto sum table with 0
                     try
                     {
-                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`, `{0}`) VALUES ('{1}', '{2}');", config.Date, id + 1, btleSum), myConn);
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`) VALUES ('{0}');", id + 1), myConn);
                         if (myCmd.ExecuteNonQuery() > 0)
                         {
 
@@ -400,7 +400,41 @@ namespace WOWS_Detonation_Counter
                             MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
                             goto RESTART;
                         }
-                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`, `{0}`) VALUES ('{1}', '{2}');", config.Date, id + 1, detoSum), myConn);
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`) VALUES ('{0}');", id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
+                        goto RESTART;
+                    }
+
+                    //update battle sum and deto sum for trigger
+                    try
+                    {
+                        myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_btle_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, btleSum, id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                        myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_deto_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, detoSum, id + 1), myConn);
                         if (myCmd.ExecuteNonQuery() > 0)
                         {
 
@@ -432,7 +466,7 @@ namespace WOWS_Detonation_Counter
                     "INSERT INTO `wows_detonation`.`asia_deto_period_rank` (`id`) VALUES ('{0}');" +
                     "INSERT INTO `wows_detonation`.`asia_deto_total_ratio` (`id`) VALUES ('{0}');" +
                     "INSERT INTO `wows_detonation`.`asia_deto_total_ratio_rank` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');"+
+                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');" +
                     "INSERT INTO `wows_detonation`.`asia_deto_period_ratio_rank` (`id`) VALUES ('{0}');",
                     id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1), myConn);
                     if (myCmd.ExecuteNonQuery() > 0)
@@ -1008,10 +1042,10 @@ namespace WOWS_Detonation_Counter
                         Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div3.battles);
                 detoSum = playerAchievementData.data.playerAchievementDataData.battle.DETONATED;
 
-                //insert battle sum and deto sum
+                //initialize battle sum and deto sum table with 0
                 try
                 {
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`, `{0}`) VALUES ('{1}', '{2}');", config.Date, id + 1, btleSum), myConn);
+                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`) VALUES ('{0}');", id + 1), myConn);
                     if (myCmd.ExecuteNonQuery() > 0)
                     {
 
@@ -1022,7 +1056,41 @@ namespace WOWS_Detonation_Counter
                         MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
                         goto RESTART;
                     }
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`, `{0}`) VALUES ('{1}', '{2}');", config.Date, id + 1, detoSum), myConn);
+                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`) VALUES ('{0}');", id + 1), myConn);
+                    if (myCmd.ExecuteNonQuery() > 0)
+                    {
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
+                        MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
+                        goto RESTART;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                    Console.WriteLine("Retry after 10 seconds...");
+                    Thread.Sleep(10000);
+                    goto RESTART;
+                }
+
+                //update battle sum and deto sum for trigger
+                try
+                {
+                    myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_btle_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, btleSum, id + 1), myConn);
+                    if (myCmd.ExecuteNonQuery() > 0)
+                    {
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
+                        MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
+                        goto RESTART;
+                    }
+                    myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_deto_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, detoSum, id + 1), myConn);
                     if (myCmd.ExecuteNonQuery() > 0)
                     {
 
@@ -1043,6 +1111,8 @@ namespace WOWS_Detonation_Counter
                 }
 
             }
+
+
 
             //initialize other table with 0
             try
