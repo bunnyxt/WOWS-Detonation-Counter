@@ -32,7 +32,7 @@ namespace WOWS_Detonation_Counter
             startTime = DateTime.Now;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-06-04");
+            Console.WriteLine("by bunnyxt 2018-06-15");
             Console.WriteLine("start time : " + startTime.ToString());
             Console.WriteLine();
 
@@ -80,7 +80,15 @@ namespace WOWS_Detonation_Counter
                     break;
                 case 3:
                     Console.WriteLine("mode3:");
-                    Console.WriteLine("AccountId:\t" + config.Mode3.AccountId);
+                    Console.WriteLine("AccountId:\t");
+                    foreach (var accountId in config.Mode3.AccountId)
+                    {
+                        Console.WriteLine(accountId.ToString());
+                    }
+                    break;
+                case 4:
+                    Console.WriteLine("mode4:");
+                    Console.WriteLine("FileName:\t" + config.Mode4.FileName);
                     break;
                 //case 999:
                 //    SendMail("SubjectTest","BodyTest");
@@ -114,7 +122,8 @@ namespace WOWS_Detonation_Counter
             Console.WriteLine("Select mode:");
             Console.WriteLine("1 for finding new users (one by one)");
             Console.WriteLine("2 for updating now exist users");
-            Console.WriteLine("3 for inserting one user via account_id");
+            Console.WriteLine("3 for inserting some user via appointed account_ids");
+            Console.WriteLine("4 for pick account_ids in a file");
             Console.WriteLine();
             Thread.Sleep(1000);
 
@@ -129,6 +138,9 @@ namespace WOWS_Detonation_Counter
                     break;
                 case 3:
                     AddNewUserViaAccountId(myConn);
+                    break;
+                case 4:
+                    PickAccountIds();
                     break;
                 default:
                     Console.WriteLine("Invalid mode id " + config.Mode + " !");
@@ -281,6 +293,17 @@ namespace WOWS_Detonation_Counter
                     }
 
                     account_id++;
+                    continue;
+                }
+
+                //detect null player data
+                if (playerPersonalDataData.data.playerPersonalDataDataData == null)
+                {
+                    Console.WriteLine("null player personal data detected! account_id = " + account_id);
+                    Console.WriteWarning("null player personal data detected! account_id = " + account_id);
+                    Console.WriteLine();
+                    SendMail("Null player personal data detected!", config.Tag + " account_id:" + account_id);
+                    Console.WriteLine();
                     continue;
                 }
 
@@ -637,6 +660,17 @@ namespace WOWS_Detonation_Counter
                         continue;
                     }
 
+                    //detect null player data
+                    if (playerPersonalDataData.data.playerPersonalDataDataData == null)
+                    {
+                        Console.WriteLine("null player personal data detected! account_id = " + account_id + " id = " + id);
+                        Console.WriteWarning("null player personal data detected! account_id = " + account_id + " id = " + id);
+                        Console.WriteLine();
+                        SendMail("Null player personal data detected!", config.Tag + " account_id:" + account_id + " id = " + id);
+                        Console.WriteLine();
+                        continue;
+                    }
+
                     //check hidden status
                     if (isHidden == false && playerPersonalDataData.meta.hidden == "hidden")
                     {
@@ -874,298 +908,361 @@ namespace WOWS_Detonation_Counter
             bool isHidden = false;
 
             //load target accountId
-            long targetAccountId = config.Mode3.AccountId;
-            Console.WriteLine("Target Account Id is " + targetAccountId);
-
-            //check whether accountId existed
-            try
+            List<long> targetAccountIds = config.Mode3.AccountId;
+            Console.WriteLine("Target Account Ids are ");
+            foreach (var targetAccountId in targetAccountIds)
             {
-                myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player where account_id = " + targetAccountId + ";", myConn);
-                myRdr = myCmd.ExecuteReader();
-                while (myRdr.Read())
+                Console.WriteLine(targetAccountId.ToString());
+            }
+
+            foreach (var targetAccountId in targetAccountIds)
+            {
+
+                //check whether accountId existed
+                try
                 {
-                    Console.WriteLine("AccountId " + targetAccountId + " already exist!");
-                    Console.WriteLine(myRdr.GetInt32(0).ToString() + " " + myRdr.GetInt64(1).ToString() + " " + myRdr.GetString(2) + " " + myRdr.GetBoolean(3).ToString());
+                    myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player where account_id = " + targetAccountId + ";", myConn);
+                    myRdr = myCmd.ExecuteReader();
+                    while (myRdr.Read())
+                    {
+                        Console.WriteLine("AccountId " + targetAccountId + " already exist!");
+                        Console.WriteLine(myRdr.GetInt32(0).ToString() + " " + myRdr.GetInt64(1).ToString() + " " + myRdr.GetString(2) + " " + myRdr.GetBoolean(3).ToString());
+                        myRdr.Close();
+                        return;
+                    }
                     myRdr.Close();
-                    return;
-                }
-                myRdr.Close();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteWarning("MySQL execution(s) ran into an error! Details:" + e.Message);
-                MessageBox.Show("MySQL execution(s) ran into an error!\nDetails:" + e.Message, "Error!");
-                throw;
-            }
-
-            try
-            {
-                myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player ORDER BY id DESC LIMIT 1;", myConn);
-                myRdr = myCmd.ExecuteReader();
-                while (myRdr.Read())
-                {
-                    existedMaxId = myRdr.GetInt32(0);
-                    account_id = myRdr.GetInt64(1);
-                }
-                myRdr.Close();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteWarning("MySQL execution(s) ran into an error! Details:" + e.Message);
-                MessageBox.Show("MySQL execution(s) ran into an error!\nDetails:" + e.Message, "Error!");
-                throw;
-            }
-
-            id = existedMaxId;
-            account_id = targetAccountId;
-
-            //getting target user
-            Console.WriteLine("account_id:" + account_id);
-
-            //initialize data
-            detoSum = -1; btleSum = -1;
-            username = "";
-            isHidden = false;
-
-            //get player personal data
-            RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
-
-            //check skip status
-            if (playerPersonalDataData.status == "skip")
-            {
-                Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
-                Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
-                return;
-            }
-
-            username = playerPersonalDataData.data.playerPersonalDataDataData.nickname;
-
-            //check hidden status
-            if (playerPersonalDataData.meta.hidden == "hidden")
-            {
-                isHidden = true;
-
-                //insert hidden status
-                try
-                {
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_player` (`id`, `account_id`, `user_name`, `is_hidden`) VALUES ('{0}', '{1}', '{2}', '1')", id + 1, account_id, username), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
-                        Console.WriteLine("Hidden!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fail to insert new user simple info to asia_player!");
-                        MessageBox.Show("Fail to insert new user simple info to asia_player!", "Error!");
-                        goto RESTART;
-                    }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                    Console.WriteLine("Retry after 10 seconds...");
-                    Thread.Sleep(10000);
-                    goto RESTART;
+                    Console.WriteLine(e.Message);
+                    Console.WriteWarning("MySQL execution(s) ran into an error! Details:" + e.Message);
+                    MessageBox.Show("MySQL execution(s) ran into an error!\nDetails:" + e.Message, "Error!");
+                    throw;
                 }
 
-                //initialize battle sum and deto sum table with 0
                 try
                 {
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`) VALUES ('{0}');", id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
+                    myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player ORDER BY id DESC LIMIT 1;", myConn);
+                    myRdr = myCmd.ExecuteReader();
+                    while (myRdr.Read())
                     {
-
+                        existedMaxId = myRdr.GetInt32(0);
+                        account_id = myRdr.GetInt64(1);
                     }
-                    else
-                    {
-                        Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
-                        MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
-                        goto RESTART;
-                    }
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`) VALUES ('{0}');", id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
-                        MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
-                        goto RESTART;
-                    }
+                    myRdr.Close();
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                    Console.WriteLine("Retry after 10 seconds...");
-                    Thread.Sleep(10000);
-                    goto RESTART;
+                    Console.WriteLine(e.Message);
+                    Console.WriteWarning("MySQL execution(s) ran into an error! Details:" + e.Message);
+                    MessageBox.Show("MySQL execution(s) ran into an error!\nDetails:" + e.Message, "Error!");
+                    throw;
                 }
-            }
-            else
-            {
+
+                id = existedMaxId;
+                account_id = targetAccountId;
+
+                //getting target user
+                Console.WriteLine("account_id:" + account_id);
+
+                //initialize data
+                detoSum = -1; btleSum = -1;
+                username = "";
                 isHidden = false;
 
-                //insert not hidden status
-                try
-                {
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_player` (`id`, `account_id`, `user_name`, `is_hidden`) VALUES ('{0}', '{1}', '{2}', '0')", id + 1, account_id, username), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fail to insert new user simple info to asia_player!");
-                        MessageBox.Show("Fail to insert new user simple info to asia_player!", "Error!");
-                        goto RESTART;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                    Console.WriteLine("Retry after 10 seconds...");
-                    Thread.Sleep(10000);
-                    goto RESTART;
-                }
-
-                //get player achievement data
-                playerAchievementData = await Proxy.GetPlayerAchievementAsync(account_id);
+                //get player personal data
+                RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
                 //check skip status
-                if (playerAchievementData.status == "skip")
+                if (playerPersonalDataData.status == "skip")
                 {
                     Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
                     Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
                     return;
                 }
 
-                //calculate battle sum and deto sum
-                btleSum =
-                        Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.club.battles) +
-                        Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.pvp.battles) +
-                        Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_solo.battles) +
-                        Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div2.battles) +
-                        Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div3.battles);
-                detoSum = playerAchievementData.data.playerAchievementDataData.battle.DETONATED;
-
-                //initialize battle sum and deto sum table with 0
-                try
+                //detect null player data
+                if (playerPersonalDataData.data.playerPersonalDataDataData == null)
                 {
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`) VALUES ('{0}');", id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
-                        MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
-                        goto RESTART;
-                    }
-                    myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`) VALUES ('{0}');", id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
-                        MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
-                        goto RESTART;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                    Console.WriteLine("Retry after 10 seconds...");
-                    Thread.Sleep(10000);
-                    goto RESTART;
+                    Console.WriteLine("null player personal data detected! account_id = " + account_id);
+                    Console.WriteWarning("null player personal data detected! account_id = " + account_id);
+                    Console.WriteLine();
+                    SendMail("Null player personal data detected!", config.Tag + " account_id:" + account_id);
+                    Console.WriteLine();
+                    continue;
                 }
 
-                //initialize other table with 0
-                try
-                {
-                    myCmd = new MySqlCommand(String.Format("" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_total_rank` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_btle_period` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period_rank` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_total_ratio` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_total_ratio_rank` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');" +
-                    "INSERT INTO `wows_detonation`.`asia_deto_period_ratio_rank` (`id`) VALUES ('{0}');",
-                    id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
+                username = playerPersonalDataData.data.playerPersonalDataDataData.nickname;
 
-                    }
-                    else
+                //check hidden status
+                if (playerPersonalDataData.meta.hidden == "hidden")
+                {
+                    isHidden = true;
+
+                    //insert hidden status
+                    try
                     {
-                        Console.WriteLine("Fail to initialize other table!");
-                        MessageBox.Show("Fail to initialize other table!", "Error!");
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_player` (`id`, `account_id`, `user_name`, `is_hidden`) VALUES ('{0}', '{1}', '{2}', '1')", id + 1, account_id, username), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+                            Console.WriteLine("Hidden!");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user simple info to asia_player!");
+                            MessageBox.Show("Fail to insert new user simple info to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
                         goto RESTART;
                     }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                    Console.WriteLine("Retry after 10 seconds...");
-                    Thread.Sleep(10000);
-                    goto RESTART;
-                }
 
-                //update battle sum and deto sum for trigger
-                try
-                {
-                    myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_btle_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, btleSum, id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
+                    //initialize battle sum and deto sum table with 0
+                    try
                     {
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`) VALUES ('{0}');", id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
 
-                    }
-                    else
-                    {
-                        Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
-                        MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
-                        goto RESTART;
-                    }
-                    myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_deto_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, detoSum, id + 1), myConn);
-                    if (myCmd.ExecuteNonQuery() > 0)
-                    {
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`) VALUES ('{0}');", id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
 
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
-                        MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
                         goto RESTART;
                     }
                 }
-                catch (Exception e)
+                else
                 {
-                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
-                    Console.WriteLine("Retry after 10 seconds...");
-                    Thread.Sleep(10000);
-                    goto RESTART;
+                    isHidden = false;
+
+                    //insert not hidden status
+                    try
+                    {
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_player` (`id`, `account_id`, `user_name`, `is_hidden`) VALUES ('{0}', '{1}', '{2}', '0')", id + 1, account_id, username), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user simple info to asia_player!");
+                            MessageBox.Show("Fail to insert new user simple info to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
+                        goto RESTART;
+                    }
+
+                    //get player achievement data
+                    playerAchievementData = await Proxy.GetPlayerAchievementAsync(account_id);
+
+                    //check skip status
+                    if (playerAchievementData.status == "skip")
+                    {
+                        Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                        Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                        return;
+                    }
+
+                    //calculate battle sum and deto sum
+                    btleSum =
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.club.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.pvp.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_solo.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div2.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div3.battles);
+                    detoSum = playerAchievementData.data.playerAchievementDataData.battle.DETONATED;
+
+                    //initialize battle sum and deto sum table with 0
+                    try
+                    {
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_btle_total` (`id`) VALUES ('{0}');", id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                        myCmd = new MySqlCommand(String.Format("INSERT INTO `wows_detonation`.`asia_deto_total` (`id`) VALUES ('{0}');", id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
+                        goto RESTART;
+                    }
+
+                    //initialize other table with 0
+                    try
+                    {
+                        myCmd = new MySqlCommand(String.Format("" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_total_rank` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_btle_period` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period_rank` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_total_ratio` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_total_ratio_rank` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period_ratio` (`id`) VALUES ('{0}');" +
+                        "INSERT INTO `wows_detonation`.`asia_deto_period_ratio_rank` (`id`) VALUES ('{0}');",
+                        id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1, id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to initialize other table!");
+                            MessageBox.Show("Fail to initialize other table!", "Error!");
+                            goto RESTART;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
+                        goto RESTART;
+                    }
+
+                    //update battle sum and deto sum for trigger
+                    try
+                    {
+                        myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_btle_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, btleSum, id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user battle sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user battle sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                        myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_deto_total` SET `{0}`='{1}' WHERE `id`='{2}';", config.Date, detoSum, id + 1), myConn);
+                        if (myCmd.ExecuteNonQuery() > 0)
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Fail to insert new user deto sum to asia_btle_total!");
+                            MessageBox.Show("Fail to insert new user deto sum to asia_player!", "Error!");
+                            goto RESTART;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                        Console.WriteLine("Retry after 10 seconds...");
+                        Thread.Sleep(10000);
+                        goto RESTART;
+                    }
+
                 }
 
+                Console.WriteLine(
+                    "\nid:\t" + (id + 1) + "\t" +
+                    "nickname:\t" + username + "\t" +
+                    "btleSum:\t" + btleSum + "\t" +
+                    "detoSum:\t" + detoSum + "\t" +
+                    "nullCount:\t" + nullCount + "\t"
+                    );
+                nullCount = 0;
+                Console.WriteLine("");
+
+                id++;
             }
 
-            Console.WriteLine(
-                "\nid:\t" + (id + 1) + "\t" +
-                "nickname:\t" + username + "\t" +
-                "btleSum:\t" + btleSum + "\t" +
-                "detoSum:\t" + detoSum + "\t" +
-                "nullCount:\t" + nullCount + "\t"
-                );
-            nullCount = 0;
-            Console.WriteLine("");
-
-            id++;
-
             Console.WriteLine("Done!");
+        }
+
+        public static void PickAccountIds()
+        {
+            Console.WriteLine("Now load file " + config.Mode4.FileName + "...");
+            FileStream file;
+            byte[] fileBytes;
+            string fileString;
+            try
+            {
+                file = new FileStream("./" + config.Mode4.FileName, FileMode.Open, FileAccess.Read);
+                fileBytes = new byte[file.Length];
+                file.Read(fileBytes, 0, (int)file.Length);
+                fileString = Encoding.Default.GetString(fileBytes);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteWarning(e.Message);
+                throw;
+            }
+            Console.WriteLine("File loaded succeed!");
+            Console.WriteLine();
+
+            Regex regex = new Regex(@"(\d\d\d\d\d\d\d\d\d\d)");
+
+            FileStream fs = new FileStream("./accountIds.txt", FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+
+            MatchCollection userMatchColl = regex.Matches(fileString);
+
+            foreach (Match matchItem in userMatchColl)
+            {
+                Console.WriteLine(matchItem.Value);
+                sw.Write(matchItem.Value + ",");
+            }
+            Console.WriteLine();
+
+            sw.Flush();
+            sw.Close();
+            fs.Close();
+
+            Console.WriteLine("Account Ids picked in accountIds.txt finished succeed!");
+            Console.WriteLine();
         }
     }
 }
