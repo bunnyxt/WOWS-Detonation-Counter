@@ -648,6 +648,8 @@ namespace WOWS_Detonation_Counter
                     username = usernames[i];
                     isHidden = isHiddens[i];
 
+                    int nullCount = 0;
+
                     //get personal data for personal information and battle number
                     RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
 
@@ -663,12 +665,22 @@ namespace WOWS_Detonation_Counter
                     //detect null player data
                     if (playerPersonalDataData.data.playerPersonalDataDataData == null)
                     {
-                        Console.WriteLine("null player personal data detected! account_id = " + account_id + " id = " + id);
-                        Console.WriteWarning("null player personal data detected! account_id = " + account_id + " id = " + id);
+                        nullCount++;
+                        Console.WriteLine("null player personal data detected! Now retry... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
+                        Console.WriteWarning("null player personal data detected! Now retry... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
                         Console.WriteLine();
-                        SendMail("Null player personal data detected!", config.Tag + " account_id:" + account_id + " id = " + id);
-                        Console.WriteLine();
-                        continue;
+
+                        if (nullCount >= 10)
+                        {
+                            Console.WriteLine("null player personal data detected! Now Skip... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
+                            Console.WriteWarning("null player personal data detected! Now Skip... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
+                            Console.WriteLine();
+                            SendMail("Null player personal data detected!", "tag: " + config.Tag + " account_id:" + account_id + " id = " + id);
+                            Console.WriteLine();
+                            continue;
+                        }
+
+                        goto RESTART;
                     }
 
                     //check hidden status
