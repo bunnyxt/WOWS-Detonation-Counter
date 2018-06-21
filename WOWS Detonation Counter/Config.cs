@@ -33,6 +33,12 @@ namespace WOWS_Detonation_Counter
         [JsonProperty("mode4")]
         public Mode4 Mode4 { get; set; }
 
+        [JsonProperty("mode5")]
+        public Mode5 Mode5 { get; set; }
+
+        [JsonProperty("mode998")]
+        public Mode998 Mode998 { get; set; }
+
         [JsonProperty("mail")]
         public Mail Mail { get; set; }
 
@@ -67,6 +73,18 @@ namespace WOWS_Detonation_Counter
     {
         [JsonProperty("fileName")]
         public string FileName { get; set; }
+    }
+
+    public class Mode5
+    {
+        [JsonProperty("id")]
+        public List<int> Id { get; set; }
+    }
+
+    public class Mode998
+    {
+        [JsonProperty("accountId")]
+        public List<long> AccountId { get; set; }
     }
 
     public class MySqlDatabase

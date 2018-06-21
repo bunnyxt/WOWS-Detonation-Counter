@@ -32,7 +32,7 @@ namespace WOWS_Detonation_Counter
             startTime = DateTime.Now;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-06-15");
+            Console.WriteLine("by bunnyxt 2018-06-21");
             Console.WriteLine("start time : " + startTime.ToString());
             Console.WriteLine();
 
@@ -90,6 +90,14 @@ namespace WOWS_Detonation_Counter
                     Console.WriteLine("mode4:");
                     Console.WriteLine("FileName:\t" + config.Mode4.FileName);
                     break;
+                case 5:
+                    Console.WriteLine("mode5:");
+                    Console.WriteLine("ids:\t");
+                    foreach (var id in config.Mode5.Id)
+                    {
+                        Console.WriteLine(id.ToString());
+                    }
+                    break;
                 //case 999:
                 //    SendMail("SubjectTest","BodyTest");
                 //    break;
@@ -124,6 +132,7 @@ namespace WOWS_Detonation_Counter
             Console.WriteLine("2 for updating now exist users");
             Console.WriteLine("3 for inserting some user via appointed account_ids");
             Console.WriteLine("4 for pick account_ids in a file");
+            Console.WriteLine("5 for updating some user via appointed ids");
             Console.WriteLine();
             Thread.Sleep(1000);
 
@@ -141,6 +150,9 @@ namespace WOWS_Detonation_Counter
                     break;
                 case 4:
                     PickAccountIds();
+                    break;
+                case 5:
+                    UpdateUsersViaId(myConn);
                     break;
                 default:
                     Console.WriteLine("Invalid mode id " + config.Mode + " !");
@@ -669,6 +681,7 @@ namespace WOWS_Detonation_Counter
                         Console.WriteLine("null player personal data detected! Now retry... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
                         Console.WriteWarning("null player personal data detected! Now retry... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
                         Console.WriteLine();
+                        Thread.Sleep(1000);
 
                         if (nullCount >= 10)
                         {
@@ -1231,6 +1244,322 @@ namespace WOWS_Detonation_Counter
             }
 
             Console.WriteLine("Done!");
+        }
+
+        public static async void UpdateUsersViaId(MySqlConnection myConn)
+        {
+            //mysql components
+            MySqlConnection myCon;
+            MySqlCommand myCmd;
+            MySqlDataReader myRdr;
+
+            //operation instances
+            PlayerAchievement playerAchievementData = null;
+            PlayerPersonalData playerPersonalDataData = null;
+
+            //sql manage data
+            //string date = "Y17W44";
+
+            int id, existedMaxId = 0, detoSum = -1, btleSum = -1;
+            long account_id = 0;
+            string username = "";
+            bool isHidden = false;
+
+            //load target id
+            List<int> ids_ = config.Mode5.Id;
+            Console.WriteLine("Target Ids are ");
+            foreach (var id_ in ids_)
+            {
+                Console.WriteLine(id_.ToString());
+            }
+
+            //update selected users
+            try
+            {
+                //connect to database for inner usage
+                try
+                {
+                    myCon = GetMySqlConnection();
+                    Console.WriteLine("now connecting database...");
+                    myCon.Open();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    MessageBox.Show("Cannot connect to database!\nDetails:" + e.Message, "Error!");
+                    throw;
+                }
+                Console.WriteLine("connection succeed!");
+                Console.WriteLine();
+
+                //get user profile before
+                int i = 0;
+
+                //range limit 300000
+                int[] ids = new int[300000];
+                long[] accountIds = new long[300000];
+                string[] usernames = new string[300000];
+                bool[] isHiddens = new bool[300000];
+
+                i = 0;
+                foreach (var id_ in ids_)
+                {
+                    myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player WHERE id = " + id_, myConn);
+                    myRdr = myCmd.ExecuteReader();
+                    while (myRdr.Read())
+                    {
+                        ids[i] = myRdr.GetInt32(0);
+                        accountIds[i] = myRdr.GetInt64(1);
+                        usernames[i] = myRdr.GetString(2);
+                        isHiddens[i] = myRdr.GetBoolean(3);
+                        i++;
+                    }
+                    myRdr.Close();
+                }
+                int userNum = i;
+
+                //inner update
+                i = 0;
+                for (i = 0; i < userNum; i++)
+                {
+                    //initialize data
+                    detoSum = -1; btleSum = -1;
+                    username = "";
+                    isHidden = false;
+
+                    //read from array
+                    id = ids[i];
+                    account_id = accountIds[i];
+                    username = usernames[i];
+                    isHidden = isHiddens[i];
+
+                    int nullCount = 0;
+
+                    //get personal data for personal information and battle number
+                    RESTART: playerPersonalDataData = await Proxy.GetPlayerPersonalDataAsync(account_id);
+
+                    //check skip status
+                    if (playerPersonalDataData.status == "skip")
+                    {
+                        Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                        Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                        SendMail("Skip status detected!", DateTime.Now.ToString() + "  playerPersonalDataData.status == \"skip\"  Now skip id:" + id + " account_id:" + account_id + "!");
+                        continue;
+                    }
+
+                    //detect null player data
+                    if (playerPersonalDataData.data.playerPersonalDataDataData == null)
+                    {
+                        nullCount++;
+                        Console.WriteLine("null player personal data detected! Now retry... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
+                        Console.WriteWarning("null player personal data detected! Now retry... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
+                        Console.WriteLine();
+                        Thread.Sleep(1000);
+
+                        if (nullCount >= 10)
+                        {
+                            Console.WriteLine("null player personal data detected! Now Skip... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
+                            Console.WriteWarning("null player personal data detected! Now Skip... account_id = " + account_id + " id = " + id + " nullCount = " + nullCount);
+                            Console.WriteLine();
+                            SendMail("Null player personal data detected!", "tag: " + config.Tag + " account_id:" + account_id + " id = " + id);
+                            Console.WriteLine();
+                            continue;
+                        }
+
+                        goto RESTART;
+                    }
+
+                    //check hidden status
+                    if (isHidden == false && playerPersonalDataData.meta.hidden == "hidden")
+                    {
+                        //change from not hidden to hidden
+                        try
+                        {
+                            myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_player` SET `is_hidden`='1' WHERE `id`='{1}'", playerPersonalDataData.data.playerPersonalDataDataData.nickname, id), myCon);
+                            if (myCmd.ExecuteNonQuery() > 0)
+                            {
+                                Console.WriteLine("Changed from not hidden to hidden");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Fail to change from not hidden to hidden in aisa_player!");
+                                MessageBox.Show("MySQL UPDATE command error!\nFail to change from not hidden to hidden in aisa_player!", "Error!");
+                                goto RESTART;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                            Console.WriteLine("Retry after 10 seconds...");
+                            Thread.Sleep(10000);
+                            goto RESTART;
+                        }
+
+                    }
+                    if (isHidden == true && playerPersonalDataData.meta.hidden == null)
+                    {
+                        //change from hidden to not hidden
+                        try
+                        {
+                            myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_player` SET `is_hidden`='0' WHERE `id`='{1}'", playerPersonalDataData.data.playerPersonalDataDataData.nickname, id), myCon);
+                            if (myCmd.ExecuteNonQuery() > 0)
+                            {
+                                Console.WriteLine("Changed from hidden to not hidden");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Fail to change from hidden to not hidden in aisa_player!");
+                                MessageBox.Show("MySQL UPDATE command error!\nFail to change from hidden to not hidden in aisa_player!", "Error!");
+                                goto RESTART;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                            Console.WriteLine("Retry after 10 seconds...");
+                            Thread.Sleep(10000);
+                            goto RESTART;
+                        }
+
+                    }
+
+                    //update username
+                    if (username != playerPersonalDataData.data.playerPersonalDataDataData.nickname)
+                    {
+                        username = playerPersonalDataData.data.playerPersonalDataDataData.nickname;
+                        try
+                        {
+                            myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_player` SET `user_name`='{0}' WHERE `id`='{1}'", username, id), myCon);
+                            if (myCmd.ExecuteNonQuery() > 0)
+                            {
+                                Console.WriteLine("Username updated!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Fail to update username in aisa_player!");
+                                MessageBox.Show("MySQL UPDATE command error!\nFail to update username in aisa_player!", "Error!");
+                                goto RESTART;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                            Console.WriteLine("Retry after 10 seconds...");
+                            Thread.Sleep(10000);
+                            goto RESTART;
+                        }
+                    }
+
+                    //not hidden player need to update their battle and deto number
+                    if (playerPersonalDataData.meta.hidden != "hidden")
+                    {
+                        //get player achievement data
+                        playerAchievementData = await Proxy.GetPlayerAchievementAsync(account_id);
+
+                        //check skip status
+                        if (playerAchievementData.status == "skip")
+                        {
+                            Console.WriteLine("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                            Console.WriteWarning("Skip status detected! Now skip id:" + id + " account_id:" + account_id + "!");
+                            SendMail("Skip status detected!", DateTime.Now.ToString() + "  playerAchievementData.status == \"skip\"  Now skip id:" + id + " account_id:" + account_id + "!");
+                            continue;
+                        }
+
+                        //update battle sum and deto sum
+                        //update asia_btle_total
+                        btleSum =
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.club.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.pvp.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_solo.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div2.battles) +
+                            Convert.ToInt32(playerPersonalDataData.data.playerPersonalDataDataData.statistics.rank_div3.battles);
+                        try
+                        {
+                            myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_btle_total` SET `{0}`='{1}' WHERE `id`='{2}'", config.Date, btleSum, id), myCon);
+                            if (myCmd.ExecuteNonQuery() > 0)
+                            {
+
+                            }
+                            else
+                            {
+                                Console.WriteLine("Fail to update battle sum in asia_btle_total!");
+                                MessageBox.Show("MySQL UPDATE command error!\nFail to update battle sum in asia_btle_total!", "Error!");
+                                goto RESTART;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                            Console.WriteLine("Retry after 10 seconds...");
+                            Thread.Sleep(10000);
+                            goto RESTART;
+                        }
+
+                        //update asia_deto_total
+                        detoSum = playerAchievementData.data.playerAchievementDataData.battle.DETONATED;
+                        try
+                        {
+                            myCmd = new MySqlCommand(String.Format("UPDATE `wows_detonation`.`asia_deto_total` SET `{0}`='{1}' WHERE `id`='{2}'", config.Date, detoSum, id), myCon);
+                            if (myCmd.ExecuteNonQuery() > 0)
+                            {
+
+                            }
+                            else
+                            {
+                                Console.WriteLine("Fail to update deto sum in asia_btle_total!");
+                                MessageBox.Show("MySQL UPDATE command error!\nFail to update deto sum in asia_btle_total!", "Error!");
+                                goto RESTART;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                            Console.WriteLine("Retry after 10 seconds...");
+                            Thread.Sleep(10000);
+                            goto RESTART;
+                        }
+
+                    }
+
+                    //show result
+                    Console.WriteLine(
+                        "id:\t\t" + id + "\t" +
+                        "account_id:\t" + account_id + "\t\n" +
+                        "is_hidden:\t" + isHidden + "\t" +
+                        "nickname:\t" + username + "\t\n" +
+                        "btleSum:\t" + btleSum + "\t" +
+                        "detoSum:\t" + detoSum + "\t"
+                        );
+                    Console.WriteLine();
+                }
+
+                //close database
+                try
+                {
+                    Console.WriteLine("now closing database...");
+                    myCon.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    MessageBox.Show("Cannot close database!\nDetails:" + e.Message, "Error!");
+                    throw;
+                }
+                Console.WriteLine("close succeed!");
+                Console.WriteLine();
+
+                endTime = DateTime.Now;
+                Console.WriteLine("end time : " + endTime.ToString());
+                Console.WriteLine();
+                SendMail("Mode 2 Finihed!", "RangeMin:" + config.Mode2.RangeMin + " RangeMax:" + config.Mode2.RangeMax + " start time : " + startTime.ToString() + " end time : " + endTime.ToString());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                MessageBox.Show("MySQL execution(s) ran into an error!\nDetails:" + e.Message, "Error!");
+                throw;
+            }
+
         }
 
         public static void PickAccountIds()
