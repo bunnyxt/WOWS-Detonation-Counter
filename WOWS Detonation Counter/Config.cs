@@ -36,6 +36,12 @@ namespace WOWS_Detonation_Counter
         [JsonProperty("mode5")]
         public Mode5 Mode5 { get; set; }
 
+        [JsonProperty("mode6")]
+        public Mode6 Mode6 { get; set; }
+
+        [JsonProperty("mode7")]
+        public Mode7 Mode7 { get; set; }
+
         [JsonProperty("mode998")]
         public Mode998 Mode998 { get; set; }
 
@@ -76,6 +82,18 @@ namespace WOWS_Detonation_Counter
     }
 
     public class Mode5
+    {
+        [JsonProperty("id")]
+        public List<int> Id { get; set; }
+    }
+
+    public class Mode6
+    {
+        [JsonProperty("fileName")]
+        public string FileName { get; set; }
+    }
+
+    public class Mode7
     {
         [JsonProperty("id")]
         public List<int> Id { get; set; }

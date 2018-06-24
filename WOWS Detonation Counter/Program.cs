@@ -32,7 +32,7 @@ namespace WOWS_Detonation_Counter
             startTime = DateTime.Now;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-06-21");
+            Console.WriteLine("by bunnyxt 2018-06-24");
             Console.WriteLine("start time : " + startTime.ToString());
             Console.WriteLine();
 
@@ -98,6 +98,18 @@ namespace WOWS_Detonation_Counter
                         Console.WriteLine(id.ToString());
                     }
                     break;
+                case 6:
+                    Console.WriteLine("mode6:");
+                    Console.WriteLine("FileName:\t" + config.Mode6.FileName);
+                    break;
+                case 7:
+                    Console.WriteLine("mode7:");
+                    Console.WriteLine("ids:\t");
+                    foreach (var id in config.Mode7.Id)
+                    {
+                        Console.WriteLine(id.ToString());
+                    }
+                    break;
                 //case 999:
                 //    SendMail("SubjectTest","BodyTest");
                 //    break;
@@ -133,6 +145,8 @@ namespace WOWS_Detonation_Counter
             Console.WriteLine("3 for inserting some user via appointed account_ids");
             Console.WriteLine("4 for pick account_ids in a file");
             Console.WriteLine("5 for updating some user via appointed ids");
+            Console.WriteLine("6 for get skipped null player ids in a file");
+            Console.WriteLine("7 for drop null players in asia_player table");
             Console.WriteLine();
             Thread.Sleep(1000);
 
@@ -153,6 +167,12 @@ namespace WOWS_Detonation_Counter
                     break;
                 case 5:
                     UpdateUsersViaId(myConn);
+                    break;
+                case 6:
+                    PickIds();
+                    break;
+                case 7:
+                    DropNullPlayers(myConn);
                     break;
                 default:
                     Console.WriteLine("Invalid mode id " + config.Mode + " !");
@@ -1562,6 +1582,77 @@ namespace WOWS_Detonation_Counter
 
         }
 
+        public static void DropNullPlayers(MySqlConnection myConn)
+        {
+            //mysql components
+            MySqlCommand myCmd;
+            MySqlDataReader myRdr;
+
+            //sql manage data
+            //string date = "Y17W44";
+
+            //load target id
+            List<int> ids_ = config.Mode7.Id;
+            Console.WriteLine("Null Ids are ");
+            foreach (var id_ in ids_)
+            {
+                Console.WriteLine(id_.ToString());
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Now drop null ids...");
+
+            int nullCount = 0;
+            int dropCount = 0;
+
+            //drop null ids
+            foreach (var id_ in ids_)
+            {
+                int id = -1;
+                long accountId = -1;
+                string username = "null";
+                bool isHidden = false;
+
+                myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player WHERE id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                if (!myRdr.HasRows)
+                {
+                    Console.WriteLine("id " + id_ + " does not exist!");
+                    myRdr.Close();
+                    continue;
+                }
+                while (myRdr.Read())
+                {
+                    id = myRdr.GetInt32(0);
+                    accountId = myRdr.GetInt64(1);
+                    username = myRdr.GetString(2);
+                    isHidden = myRdr.GetBoolean(3);
+                }
+                myRdr.Close();
+                nullCount++;
+
+                myCmd = new MySqlCommand("DROP FROM wows_detonation.asia_player WHERE id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                myRdr.Close();
+
+                myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player WHERE id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                if (!myRdr.HasRows)
+                {
+                    Console.WriteLine("id " + id_ + " dropped succeed! account_id:" + accountId + " user_name:" + username + " is_hidden:" + isHidden);
+                    dropCount++;
+                }
+                else
+                {
+                    Console.WriteLine("id " + id_ + " dropped failed!");
+                    Console.WriteWarning("id " + id_ + " dropped failed!");
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Done! " + nullCount + " null players found! " + dropCount + " null players dropped succeed!");
+        }
+
         public static void PickAccountIds()
         {
             Console.WriteLine("Now load file " + config.Mode4.FileName + "...");
@@ -1603,6 +1694,50 @@ namespace WOWS_Detonation_Counter
             fs.Close();
 
             Console.WriteLine("Account Ids picked in accountIds.txt finished succeed!");
+            Console.WriteLine();
+        }
+
+        public static void PickIds()
+        {
+            Console.WriteLine("Now load file " + config.Mode4.FileName + "...");
+            FileStream file;
+            byte[] fileBytes;
+            string fileString;
+            try
+            {
+                file = new FileStream("./" + config.Mode4.FileName, FileMode.Open, FileAccess.Read);
+                fileBytes = new byte[file.Length];
+                file.Read(fileBytes, 0, (int)file.Length);
+                fileString = Encoding.Default.GetString(fileBytes);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteWarning(e.Message);
+                throw;
+            }
+            Console.WriteLine("File loaded succeed!");
+            Console.WriteLine();
+
+            Regex regex = new Regex(@"Now Skip... account_id = \d\d\d\d\d\d\d\d\d\d id = (?<id>\d+?) nullCount = 10");
+
+            FileStream fs = new FileStream("./ids.txt", FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+
+            MatchCollection userMatchColl = regex.Matches(fileString);
+
+            foreach (Match matchItem in userMatchColl)
+            {
+                Console.WriteLine(matchItem.Groups["id"].Value);
+                sw.Write(matchItem.Groups["id"].Value + ",");
+            }
+            Console.WriteLine();
+
+            sw.Flush();
+            sw.Close();
+            fs.Close();
+
+            Console.WriteLine("Ids picked in ids.txt finished succeed!");
             Console.WriteLine();
         }
     }
