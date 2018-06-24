@@ -1582,7 +1582,7 @@ namespace WOWS_Detonation_Counter
 
         }
 
-        public static void DropNullPlayers(MySqlConnection myConn)
+        public static async void DropNullPlayers(MySqlConnection myConn)
         {
             //mysql components
             MySqlCommand myCmd;
@@ -1631,7 +1631,23 @@ namespace WOWS_Detonation_Counter
                 myRdr.Close();
                 nullCount++;
 
-                myCmd = new MySqlCommand("DROP FROM wows_detonation.asia_player WHERE id = " + id_, myConn);
+                PlayerPersonalData playerPersonalData = await Proxy.GetPlayerPersonalDataAsync(accountId);
+                if (playerPersonalData.data.playerPersonalDataDataData != null)
+                {
+                    Console.WriteLine("id " + id_ + " is not a null player!");
+                    Console.WriteWarning("id " + id_ + " is not a null player!");
+                    continue;
+                }
+
+                PlayerAchievement playerAchievement = await Proxy.GetPlayerAchievementAsync(accountId);
+                if (playerAchievement.data.playerAchievementDataData!=null)
+                {
+                    Console.WriteLine("id " + id_ + " is not a null player!");
+                    Console.WriteWarning("id " + id_ + " is not a null player!");
+                    continue;
+                }
+
+                myCmd = new MySqlCommand("DELETE FROM wows_detonation.asia_player WHERE id = " + id_, myConn);
                 myRdr = myCmd.ExecuteReader();
                 myRdr.Close();
 
@@ -1639,7 +1655,7 @@ namespace WOWS_Detonation_Counter
                 myRdr = myCmd.ExecuteReader();
                 if (!myRdr.HasRows)
                 {
-                    Console.WriteLine("id " + id_ + " dropped succeed! account_id:" + accountId + " user_name:" + username + " is_hidden:" + isHidden);
+                    Console.WriteLine("id " + id_ + " dropped succeed! account_id : " + accountId + " user_name : " + username + " is_hidden : " + isHidden);
                     dropCount++;
                 }
                 else
@@ -1647,6 +1663,7 @@ namespace WOWS_Detonation_Counter
                     Console.WriteLine("id " + id_ + " dropped failed!");
                     Console.WriteWarning("id " + id_ + " dropped failed!");
                 }
+                myRdr.Close();
             }
 
             Console.WriteLine();
