@@ -1593,6 +1593,7 @@ namespace WOWS_Detonation_Counter
 
             //load target id
             List<int> ids_ = config.Mode7.Id;
+            ids_.Sort();
             Console.WriteLine("Null Ids are ");
             foreach (var id_ in ids_)
             {
