@@ -32,7 +32,7 @@ namespace WOWS_Detonation_Counter
             startTime = DateTime.Now;
 
             Console.WriteLine("WOWS Detonation Counter");
-            Console.WriteLine("by bunnyxt 2018-06-24");
+            Console.WriteLine("by bunnyxt 2018-09-12");
             Console.WriteLine("start time : " + startTime.ToString());
             Console.WriteLine();
 
@@ -80,32 +80,36 @@ namespace WOWS_Detonation_Counter
                     break;
                 case 3:
                     Console.WriteLine("mode3:");
+                    Console.WriteLine("FileName:\t" + config.Mode3.FileName);
+                    break;
+                case 4:
+                    Console.WriteLine("mode4:");
                     Console.WriteLine("AccountId:\t");
-                    foreach (var accountId in config.Mode3.AccountId)
+                    foreach (var accountId in config.Mode4.AccountId)
                     {
                         Console.WriteLine(accountId.ToString());
                     }
                     break;
-                case 4:
-                    Console.WriteLine("mode4:");
-                    Console.WriteLine("FileName:\t" + config.Mode4.FileName);
-                    break;
                 case 5:
                     Console.WriteLine("mode5:");
+                    Console.WriteLine("FileName:\t" + config.Mode5.FileName);
+                    break;
+                case 6:
+                    Console.WriteLine("mode6:");
                     Console.WriteLine("ids:\t");
-                    foreach (var id in config.Mode5.Id)
+                    foreach (var id in config.Mode6.Id)
                     {
                         Console.WriteLine(id.ToString());
                     }
                     break;
-                case 6:
-                    Console.WriteLine("mode6:");
-                    Console.WriteLine("FileName:\t" + config.Mode6.FileName);
-                    break;
                 case 7:
                     Console.WriteLine("mode7:");
+                    Console.WriteLine("FileName:\t" + config.Mode7.FileName);
+                    break;
+                case 8:
+                    Console.WriteLine("mode7:");
                     Console.WriteLine("ids:\t");
-                    foreach (var id in config.Mode7.Id)
+                    foreach (var id in config.Mode8.Id)
                     {
                         Console.WriteLine(id.ToString());
                     }
@@ -142,11 +146,12 @@ namespace WOWS_Detonation_Counter
             Console.WriteLine("Select mode:");
             Console.WriteLine("1 for finding new users (one by one)");
             Console.WriteLine("2 for updating now exist users");
-            Console.WriteLine("3 for inserting some user via appointed account_ids");
-            Console.WriteLine("4 for pick account_ids in a file");
-            Console.WriteLine("5 for updating some user via appointed ids");
-            Console.WriteLine("6 for get skipped null player ids in a file");
-            Console.WriteLine("7 for drop null players in asia_player table");
+            Console.WriteLine("3 for get skipped normal player ids in a file");
+            Console.WriteLine("4 for inserting some user via appointed account_ids");
+            Console.WriteLine("5 for pick account_ids in a file");
+            Console.WriteLine("6 for updating some user via appointed ids");
+            Console.WriteLine("7 for get skipped null player ids in a file");
+            Console.WriteLine("8 for drop null players in asia_player table");
             Console.WriteLine();
             Thread.Sleep(1000);
 
@@ -160,18 +165,21 @@ namespace WOWS_Detonation_Counter
                     UpdateExistUsers(myConn);
                     break;
                 case 3:
-                    AddNewUserViaAccountId(myConn);
+                    PickSkipIds();
                     break;
                 case 4:
-                    PickAccountIds();
+                    AddNewUserViaAccountId(myConn);
                     break;
                 case 5:
-                    UpdateUsersViaId(myConn);
+                    PickAccountIds();
                     break;
                 case 6:
-                    PickIds();
+                    UpdateUsersViaId(myConn);
                     break;
                 case 7:
+                    PickIds();
+                    break;
+                case 8:
                     DropNullPlayers(myConn);
                     break;
                 default:
@@ -953,7 +961,7 @@ namespace WOWS_Detonation_Counter
             bool isHidden = false;
 
             //load target accountId
-            List<long> targetAccountIds = config.Mode3.AccountId;
+            List<long> targetAccountIds = config.Mode4.AccountId;
             Console.WriteLine("Target Account Ids are ");
             foreach (var targetAccountId in targetAccountIds)
             {
@@ -1286,7 +1294,7 @@ namespace WOWS_Detonation_Counter
             bool isHidden = false;
 
             //load target id
-            List<int> ids_ = config.Mode5.Id;
+            List<int> ids_ = config.Mode6.Id;
             Console.WriteLine("Target Ids are ");
             foreach (var id_ in ids_)
             {
@@ -1592,7 +1600,7 @@ namespace WOWS_Detonation_Counter
             //string date = "Y17W44";
 
             //load target id
-            List<int> ids_ = config.Mode7.Id;
+            List<int> ids_ = config.Mode8.Id;
             ids_.Sort();
             Console.WriteLine("Null Ids are ");
             foreach (var id_ in ids_)
@@ -1673,13 +1681,13 @@ namespace WOWS_Detonation_Counter
 
         public static void PickAccountIds()
         {
-            Console.WriteLine("Now load file " + config.Mode4.FileName + "...");
+            Console.WriteLine("Now load file " + config.Mode5.FileName + "...");
             FileStream file;
             byte[] fileBytes;
             string fileString;
             try
             {
-                file = new FileStream("./" + config.Mode4.FileName, FileMode.Open, FileAccess.Read);
+                file = new FileStream("./" + config.Mode5.FileName, FileMode.Open, FileAccess.Read);
                 fileBytes = new byte[file.Length];
                 file.Read(fileBytes, 0, (int)file.Length);
                 fileString = Encoding.Default.GetString(fileBytes);
@@ -1717,13 +1725,13 @@ namespace WOWS_Detonation_Counter
 
         public static void PickIds()
         {
-            Console.WriteLine("Now load file " + config.Mode4.FileName + "...");
+            Console.WriteLine("Now load file " + config.Mode7.FileName + "...");
             FileStream file;
             byte[] fileBytes;
             string fileString;
             try
             {
-                file = new FileStream("./" + config.Mode4.FileName, FileMode.Open, FileAccess.Read);
+                file = new FileStream("./" + config.Mode7.FileName, FileMode.Open, FileAccess.Read);
                 fileBytes = new byte[file.Length];
                 file.Read(fileBytes, 0, (int)file.Length);
                 fileString = Encoding.Default.GetString(fileBytes);
@@ -1737,7 +1745,7 @@ namespace WOWS_Detonation_Counter
             Console.WriteLine("File loaded succeed!");
             Console.WriteLine();
 
-            Regex regex = new Regex(@"Now Skip... account_id = \d\d\d\d\d\d\d\d\d\d id = (?<id>\d+?) nullCount = 10");
+            Regex regex = new Regex(@"null player personal data detected! Now Skip... account_id = \d\d\d\d\d\d\d\d\d\d id = (?<id>\d+?) nullCount = 10");
 
             FileStream fs = new FileStream("./ids.txt", FileMode.Create);
             StreamWriter sw = new StreamWriter(fs);
@@ -1756,6 +1764,50 @@ namespace WOWS_Detonation_Counter
             fs.Close();
 
             Console.WriteLine("Ids picked in ids.txt finished succeed!");
+            Console.WriteLine();
+        }
+
+        public static void PickSkipIds()
+        {
+            Console.WriteLine("Now load file " + config.Mode3.FileName + "...");
+            FileStream file;
+            byte[] fileBytes;
+            string fileString;
+            try
+            {
+                file = new FileStream("./" + config.Mode3.FileName, FileMode.Open, FileAccess.Read);
+                fileBytes = new byte[file.Length];
+                file.Read(fileBytes, 0, (int)file.Length);
+                fileString = Encoding.Default.GetString(fileBytes);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteWarning(e.Message);
+                throw;
+            }
+            Console.WriteLine("File loaded succeed!");
+            Console.WriteLine();
+            
+            Regex regex = new Regex(@"Skip status detected! Now skip id:(?<id>\d+?) account_id:\d+!");
+
+            FileStream fs = new FileStream("./skipids.txt", FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+
+            MatchCollection userMatchColl = regex.Matches(fileString);
+
+            foreach (Match matchItem in userMatchColl)
+            {
+                Console.WriteLine(matchItem.Groups["id"].Value);
+                sw.Write(matchItem.Groups["id"].Value + ",");
+            }
+            Console.WriteLine();
+
+            sw.Flush();
+            sw.Close();
+            fs.Close();
+
+            Console.WriteLine("Ids picked in skipids.txt finished succeed!");
             Console.WriteLine();
         }
     }
