@@ -347,6 +347,42 @@ namespace WOWS_Detonation_Counter
                     continue;
                 }
 
+                //check is existed
+                try
+                {
+                    myCmd = new MySqlCommand(String.Format("select * from wows_detonation.asia_player where account_id = {0}", account_id), myConn);
+                    myRdr = myCmd.ExecuteReader();
+                    if (myRdr.HasRows)
+                    {
+                        Console.WriteLine("account_id : " + account_id + " existed! Now skip...");
+                        Console.WriteWarning("account_id : " + account_id + " existed! Now skip...");
+                        Console.WriteLine("null  " + (++nullCount));
+                        Console.WriteLine("");
+
+                        if (nullCount == 1000)
+                        {
+                            Console.WriteLine("1000 invalid account_id passed!");
+                            endTime = DateTime.Now;
+                            Console.WriteLine("end time : " + endTime.ToString());
+                            Console.WriteLine();
+                            //TODO  account_id - 1000?? or - 1001??
+                            SendMail("Mode 1 Finihed!", "1000 invalid acount_id passed! Mow max account_id is " + (account_id - 1000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
+                            break;
+                        }
+
+                        account_id++;
+                        continue;
+                    }
+                    myRdr.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("MySQL execute error!\nDetails:" + e.Message);
+                    Console.WriteLine("Retry after 10 seconds...");
+                    Thread.Sleep(10000);
+                    goto RESTART;
+                }
+
                 username = playerPersonalDataData.data.playerPersonalDataDataData.nickname;
 
                 //check hidden status
