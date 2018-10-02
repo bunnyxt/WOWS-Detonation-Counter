@@ -370,6 +370,8 @@ namespace WOWS_Detonation_Counter
                             break;
                         }
 
+                        myRdr.Close();
+
                         account_id++;
                         continue;
                     }
