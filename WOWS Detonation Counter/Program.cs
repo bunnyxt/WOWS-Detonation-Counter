@@ -321,14 +321,14 @@ namespace WOWS_Detonation_Counter
                     Console.WriteLine("null  " + (++nullCount));
                     Console.WriteLine("");
 
-                    if (nullCount == 1000)
+                    if (nullCount == 2000)
                     {
-                        Console.WriteLine("1000 invalid account_id passed!");
+                        Console.WriteLine("2000 invalid account_id passed!");
                         endTime = DateTime.Now;
                         Console.WriteLine("end time : " + endTime.ToString());
                         Console.WriteLine();
                         //TODO  account_id - 1000?? or - 1001??
-                        SendMail("Mode 1 Finihed!", "1000 invalid acount_id passed! Mow max account_id is " + (account_id - 1000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
+                        SendMail("Mode 1 Finihed!", "2000 invalid acount_id passed! Mow max account_id is " + (account_id - 2000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
                         break;
                     }
 
@@ -359,14 +359,14 @@ namespace WOWS_Detonation_Counter
                         Console.WriteLine("null  " + (++nullCount));
                         Console.WriteLine("");
 
-                        if (nullCount == 1000)
+                        if (nullCount == 2000)
                         {
-                            Console.WriteLine("1000 invalid account_id passed!");
+                            Console.WriteLine("2000 invalid account_id passed!");
                             endTime = DateTime.Now;
                             Console.WriteLine("end time : " + endTime.ToString());
                             Console.WriteLine();
                             //TODO  account_id - 1000?? or - 1001??
-                            SendMail("Mode 1 Finihed!", "1000 invalid acount_id passed! Mow max account_id is " + (account_id - 1000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
+                            SendMail("Mode 1 Finihed!", "2000 invalid acount_id passed! Mow max account_id is " + (account_id - 2000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
                             break;
                         }
 
