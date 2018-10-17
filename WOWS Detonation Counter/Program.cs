@@ -1652,6 +1652,19 @@ namespace WOWS_Detonation_Counter
             int nullCount = 0;
             int dropCount = 0;
 
+            //create drop info file
+            FileStream fs = new FileStream("drop_detail.csv", FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+            sw.Write("id,account_id,user_name,is_hidden,info_type");
+            myCmd = new MySqlCommand("select * from wows_detonation.asia_date", myConn);
+            myRdr = myCmd.ExecuteReader();
+            while (myRdr.Read())
+            {
+                sw.Write("," + myRdr.GetString(0));
+            }
+            sw.Write("\n");
+            myRdr.Close();
+
             //drop null ids
             foreach (var id_ in ids_)
             {
@@ -1687,12 +1700,144 @@ namespace WOWS_Detonation_Counter
                 }
 
                 PlayerAchievement playerAchievement = await Proxy.GetPlayerAchievementAsync(accountId);
-                if (playerAchievement.data.playerAchievementDataData!=null)
+                if (playerAchievement.data.playerAchievementDataData != null)
                 {
                     Console.WriteLine("id " + id_ + " is not a null player!");
                     Console.WriteWarning("id " + id_ + " is not a null player!");
                     continue;
                 }
+
+                //account_id not exist, transfer data before to file
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_btle_period");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_btle_period where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_btle_total");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_btle_total where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_period");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_period where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_period_rank");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_period_rank where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_period_ratio");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_period_ratio where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetDouble(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_period_ratio_rank");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_period_ratio_rank where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_total");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_total where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_total_rank");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_total_rank where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_total_ratio");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_total_ratio where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetDouble(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
+
+                sw.Write(id_ + "," + accountId + "," + username + "," + isHidden + ",asia_deto_total_ratio_rank");
+                myCmd = new MySqlCommand("select * from wows_detonation.asia_deto_total_ratio_rank where id = " + id_, myConn);
+                myRdr = myCmd.ExecuteReader();
+                while (myRdr.Read())
+                {
+                    for (int i = 1; i < myRdr.FieldCount; i++)
+                    {
+                        sw.Write("," + myRdr.GetInt32(i).ToString());
+                    }
+                }
+                sw.Write("\n");
+                myRdr.Close();
 
                 myCmd = new MySqlCommand("DELETE FROM wows_detonation.asia_player WHERE id = " + id_, myConn);
                 myRdr = myCmd.ExecuteReader();
@@ -1712,6 +1857,10 @@ namespace WOWS_Detonation_Counter
                 }
                 myRdr.Close();
             }
+
+            sw.Flush();
+            sw.Close();
+            fs.Close();
 
             Console.WriteLine();
             Console.WriteLine("Done! " + nullCount + " null players found! " + dropCount + " null players dropped succeed!");
@@ -1826,7 +1975,7 @@ namespace WOWS_Detonation_Counter
             }
             Console.WriteLine("File loaded succeed!");
             Console.WriteLine();
-            
+
             Regex regex = new Regex(@"Skip status detected! Now skip id:(?<id>\d+?) account_id:\d+!");
 
             FileStream fs = new FileStream("./skipids.txt", FileMode.Create);
