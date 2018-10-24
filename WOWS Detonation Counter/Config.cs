@@ -61,6 +61,9 @@ namespace WOWS_Detonation_Counter
 
         [JsonProperty("startAccountId")]
         public long StartAccountId { get; set; }
+
+        [JsonProperty("maxNull")]
+        public int MaxNull { get; set; }
     }
 
     public class Mode2

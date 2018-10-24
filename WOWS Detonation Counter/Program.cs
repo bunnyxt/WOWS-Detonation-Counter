@@ -72,6 +72,7 @@ namespace WOWS_Detonation_Counter
                     Console.WriteLine("mode1:");
                     Console.WriteLine("targetSum:\t" + config.Mode1.TargetSum);
                     Console.WriteLine("startAccountId:\t" + config.Mode1.StartAccountId);
+                    Console.WriteLine("maxNull:\t" + config.Mode1.MaxNull);
                     break;
                 case 2:
                     Console.WriteLine("mode2:");
@@ -247,6 +248,8 @@ namespace WOWS_Detonation_Counter
             string username = "";
             bool isHidden = false;
 
+            int maxNull = config.Mode1.MaxNull;
+
             try
             {
                 myCmd = new MySqlCommand("SELECT * FROM wows_detonation.asia_player ORDER BY id DESC LIMIT 1;", myConn);
@@ -321,14 +324,14 @@ namespace WOWS_Detonation_Counter
                     Console.WriteLine("null  " + (++nullCount));
                     Console.WriteLine("");
 
-                    if (nullCount == 2000)
+                    if (nullCount == maxNull)
                     {
-                        Console.WriteLine("2000 invalid account_id passed!");
+                        Console.WriteLine(maxNull + " invalid account_id passed!");
                         endTime = DateTime.Now;
                         Console.WriteLine("end time : " + endTime.ToString());
                         Console.WriteLine();
                         //TODO  account_id - 1000?? or - 1001??
-                        SendMail("Mode 1 Finihed!", "2000 invalid acount_id passed! Mow max account_id is " + (account_id - 2000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
+                        SendMail("Mode 1 Finihed!", maxNull + " invalid acount_id passed! Mow max account_id is " + (account_id - maxNull) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
                         break;
                     }
 
@@ -359,14 +362,14 @@ namespace WOWS_Detonation_Counter
                         Console.WriteLine("null  " + (++nullCount));
                         Console.WriteLine("");
 
-                        if (nullCount == 2000)
+                        if (nullCount == maxNull)
                         {
-                            Console.WriteLine("2000 invalid account_id passed!");
+                            Console.WriteLine(maxNull + " invalid account_id passed!");
                             endTime = DateTime.Now;
                             Console.WriteLine("end time : " + endTime.ToString());
                             Console.WriteLine();
                             //TODO  account_id - 1000?? or - 1001??
-                            SendMail("Mode 1 Finihed!", "2000 invalid acount_id passed! Mow max account_id is " + (account_id - 2000) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
+                            SendMail("Mode 1 Finihed!", maxNull + " invalid acount_id passed! Mow max account_id is " + (account_id - maxNull) + ", max id is " + id + ", start time : " + startTime.ToString() + ", end time : " + endTime.ToString() + ".");
                             break;
                         }
 
